@@ -1,0 +1,6 @@
+.env
+Line/
+__pycache__/
+*.pyc
+venv/
+models/
