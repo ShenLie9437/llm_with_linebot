@@ -3,25 +3,12 @@ from dotenv import load_dotenv
 
 load_dotenv()  # 要在下面import llm_client/line_client之前執行，它們讀環境變數的時機是import時
 
-import psycopg2
-import psycopg2.extras
-
+from db import get_connection, dict_cursor
 from llm_client import score_with_local_llm
 from line_client import push_message
 
-DB_CONFIG = {
-    "host": os.environ.get("DB_HOST", "localhost"),
-    "port": os.environ.get("DB_PORT", "5432"),
-    "dbname": os.environ.get("DB_NAME", "jobhunt"),
-    "user": os.environ.get("DB_USER", "postgres"),
-    "password": os.environ.get("DB_PASSWORD", ""),
-}
 RESUME_FILE = os.environ.get("RESUME_FILE", "resume_profile.txt")
 NOTIFY_SCORE_THRESHOLD = int(os.environ.get("NOTIFY_SCORE_THRESHOLD", "80"))
-
-
-def dict_cursor(conn):
-    return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
 
 def load_resume():
@@ -119,7 +106,7 @@ def notify_high_score_jobs(conn):
 
 
 def main():
-    conn = psycopg2.connect(**DB_CONFIG)
+    conn = get_connection()
     try:
         try:
             score_pending_jobs(conn)
