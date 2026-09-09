@@ -1,39 +1,15 @@
-import os
 import base64
 from email.mime.text import MIMEText
 
-import truststore
-truststore.inject_into_ssl()
-
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from google_auth import get_credentials
+
 # gmail.compose才能建草稿；程式碼本身不呼叫send端點，寄送與否由使用者在Gmail App裡自己決定
-SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
-    "https://www.googleapis.com/auth/gmail.compose",
-]
-CREDENTIALS_PATH = os.environ.get("GMAIL_CREDENTIALS_PATH", "Gmail/credentials.json")
-TOKEN_PATH = os.environ.get("GMAIL_TOKEN_PATH", "Gmail/token.json")
 
 
 def get_gmail_service():
-    creds = None
-    if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
-
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-            creds = flow.run_local_server(port=0)
-        with open(TOKEN_PATH, "w", encoding="utf-8") as f:
-            f.write(creds.to_json())
-
-    return build("gmail", "v1", credentials=creds)
+    return build("gmail", "v1", credentials=get_credentials())
 
 
 def list_unread_summaries(max_results=10):

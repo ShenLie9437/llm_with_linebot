@@ -1,9 +1,13 @@
+from langchain_core.tools import tool
+
 from db import get_connection, dict_cursor
 
 QUERY_LIMIT = 5
 
 
-def handle_job_query(text):
+@tool
+def query_recent_jobs() -> str:
+    """查詢求職資料庫裡最近評分過的職缺清單（公司、職稱、匹配分數、匹配摘要）。"""
     conn = get_connection()
     try:
         with dict_cursor(conn) as cur:
@@ -23,6 +27,6 @@ def handle_job_query(text):
 
     if not jobs:
         return "目前資料庫裡還沒有已評分的職缺。"
-
-    lines = [f"{j['company']} - {j['title']}（{j['match_score']}分）：{j['match_summary']}" for j in jobs]
-    return "最近評分的職缺：\n" + "\n".join(lines)
+    return "\n".join(
+        f"{j['company']} - {j['title']}（{j['match_score']}分）：{j['match_summary']}" for j in jobs
+    )

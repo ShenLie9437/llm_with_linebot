@@ -8,7 +8,7 @@ load_dotenv()
 
 from fastapi import FastAPI, Request, HTTPException
 
-from router import handle_message
+from agent_graph import handle_message
 from line_client import reply_message
 
 LINE_CHANNEL_SECRET = os.environ.get("LINE_CHANNEL_SECRET", "")
