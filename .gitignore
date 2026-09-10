@@ -7,3 +7,4 @@ venv/
 models/
 test_push.py
 test_score.py
+docs/local-dev-webhook.md
