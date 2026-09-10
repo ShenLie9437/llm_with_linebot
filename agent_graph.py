@@ -23,7 +23,19 @@ def _get_agent():
     return _agent
 
 
+def _extract_text(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "".join(
+            part if isinstance(part, str) else part.get("text", "")
+            for part in content
+            if isinstance(part, str) or part.get("type") == "text"
+        )
+    return str(content)
+
+
 def handle_message(text: str) -> str:
     agent = _get_agent()
     result = agent.invoke({"messages": [{"role": "user", "content": text}]})
-    return result["messages"][-1].content
+    return _extract_text(result["messages"][-1].content)

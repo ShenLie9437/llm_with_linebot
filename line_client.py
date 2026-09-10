@@ -35,4 +35,6 @@ def reply_message(reply_token, text):
             "messages": [{"type": "text", "text": text}],
         },
     )
+    if response.status_code >= 400:
+        print(f"LINE reply error {response.status_code}: {response.text}")
     response.raise_for_status()
