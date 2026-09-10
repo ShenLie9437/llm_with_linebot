@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 venv/
 models/
+test_push.py
+test_score.py

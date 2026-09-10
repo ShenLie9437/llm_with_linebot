@@ -66,7 +66,6 @@ Gmail部分**只讀信+建草稿，不會自動寄送**：`gmail_client.py`完�
 - `line_client.py`：LINE Push API（單向推播）+ Reply API（webhook收到訊息後回覆）
 - `webhook_server.py`：FastAPI，接收LINE webhook事件，驗證簽章，呼叫agent並回覆
 - `tests/`：pytest測試，mock掉所有外部API呼叫（Gmail/Drive/Gemini/LINE/DB）
-- `test_push.py`/`test_score.py`：分別單獨測試推播與評分，不用跑完整流程
 
 ## 測試
 
