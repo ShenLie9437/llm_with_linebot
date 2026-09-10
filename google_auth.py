@@ -10,7 +10,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 # 所有需要Google API的模組（gmail_client.py、docs_client.py）共用同一份scope清單，
 # 避免各自宣告scope、導致某個模組觸發OAuth flow時漏掉其他模組需要的權限
 SCOPES = [
-    "https://www.googleapis.com/auth/gmail.readonly",
+    # gmail.modify涵蓋讀信、修改標籤（已讀/重要）、移到垃圾桶，
+    # 但不含永久刪除（bypassing Trash）與寄送，是gmail.readonly的superset
+    "https://www.googleapis.com/auth/gmail.modify",
     "https://www.googleapis.com/auth/gmail.compose",
     "https://www.googleapis.com/auth/drive",
     "https://www.googleapis.com/auth/documents",

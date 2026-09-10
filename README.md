@@ -29,7 +29,8 @@ agent_graph.py：LangGraph的create_react_agent（LLM為Gemini），
                 根據訊息自行決定要呼叫哪些工具、呼叫幾次
         │
         ├─ tools/job_tools.py   query_recent_jobs   查jobhunt資料庫
-        ├─ tools/gmail_tools.py list_unread_emails / draft_reply
+        ├─ tools/gmail_tools.py list_unread_emails / draft_reply /
+        │                       delete_email / mark_email_read / mark_email_important
         ├─ tools/docs_tools.py  summarize_doc / append_to_doc_by_name
         └─ tools/line_tools.py  notify_important
         ▼
@@ -49,7 +50,7 @@ email_digest.py
 
 這支排程腳本刻意不透過agent（不讓LLM自己決定要不要呼叫工具），而是固定流程直接呼叫底層函式——排程任務要求穩定可預期，交給agent自主決策反而增加不確定性；LangGraph agent保留給互動性高、需求多變的LINE對話場景用。
 
-Gmail部分**只讀信+建草稿，不會自動寄送**：`gmail_client.py`完全沒有呼叫send端點，草稿建好後要不要寄由使用者自己在Gmail App裡按送出。`docs_client.py`會依檔案的mimeType自動判斷要走哪套API：原生Google文件（在Drive UI用「Open with Google文件」轉檔過的格式，方便使用者自己手動編輯）走Docs API，純文字/markdown檔案走Drive API的下載/上傳；編輯也只有「文末新增」（`append_to_doc`），不會覆蓋或改寫既有內容，避免LLM誤改履歷格式或刪除舊紀錄。`convert_to_google_doc`可以把既有檔案複製一份轉成原生Google文件格式，原始檔案不會被動到。
+Gmail部分**可以刪除、標記已讀/重要，但絕對不會自動寄送**：`gmail_client.py`完全沒有呼叫send端點，草稿建好後要不要寄由使用者自己在Gmail App裡按送出；`delete_email`只會呼叫`messages().trash()`移到垃圾桶（可從垃圾桶復原），不會呼叫`messages().delete()`做永久刪除。`docs_client.py`會依檔案的mimeType自動判斷要走哪套API：原生Google文件（在Drive UI用「Open with Google文件」轉檔過的格式，方便使用者自己手動編輯）走Docs API，純文字/markdown檔案走Drive API的下載/上傳；編輯也只有「文末新增」（`append_to_doc`），不會覆蓋或改寫既有內容，避免LLM誤改履歷格式或刪除舊紀錄。`convert_to_google_doc`可以把既有檔案複製一份轉成原生Google文件格式，原始檔案不會被動到。
 
 ## 檔案結構
 
@@ -118,7 +119,7 @@ python score_and_notify.py
 2. 「憑證」頁建立OAuth用戶端ID，類型選「桌面應用程式」，下載JSON存成專案內的 `Gmail/credentials.json`（`Gmail/`已在`.gitignore`排除）
 3. 「OAuth同意畫面」選「測試中」、把自己的Google帳號加進測試使用者名單即可，不需要送審
 4. 第一次執行任何有呼叫`gmail_client.py`或`docs_client.py`的程式時，會自動跳出瀏覽器要求登入授權，授權完成後會在同資料夾產生`Gmail/token.json`（之後就不用再手動登入，除非token過期或撤銷授權）
-5. 要注意：程式碼裡設定的scope（`gmail.readonly`、`gmail.compose`、`drive`、`documents`，統一定義在`google_auth.py`）在Google那邊的官方定義可能會隨時間調整，實際跑`get_gmail_service()`/`get_drive_service()`/`get_docs_service()`時如果出現scope不足的錯誤，去OAuth同意畫面確認scope設定是否需要更新
+5. 要注意：程式碼裡設定的scope（`gmail.modify`、`gmail.compose`、`drive`、`documents`，統一定義在`google_auth.py`；`gmail.modify`涵蓋讀信與修改標籤/移到垃圾桶，但不含永久刪除與寄送）在Google那邊的官方定義可能會隨時間調整，實際跑`get_gmail_service()`/`get_drive_service()`/`get_docs_service()`時如果出現scope不足的錯誤，去OAuth同意畫面確認scope設定是否需要更新
 6. **重要**：需要完整的`drive`（讀寫）scope——因為要操作的是使用者自己上傳的既有檔案，而不是這個App自己建立的檔案，所以`drive.file`這種較窄的scope不夠用；`documents`則是操作原生Google文件（Docs API）要另外加的scope，`drive`本身不涵蓋。如果`Gmail/token.json`已存在但裡面存的授權範圍不包含這些新scope，需要**手動刪除`Gmail/token.json`後重新執行一次**觸發瀏覽器重新登入，才會拿到涵蓋完整scope的新token
 7. 「測試中」狀態的OAuth App，refresh token效期只有7天，過期後需要重複第4步重新登入一次；這個專案跑在本機、by design不追求全自動零維護，之後token過期時重新走一次授權流程即可，不需要額外處理
 

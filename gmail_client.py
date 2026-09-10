@@ -64,3 +64,23 @@ def create_draft_reply(message_id, body_text):
         .execute()
     )
     return draft["id"]
+
+
+def trash_message(message_id):
+    # 只移到垃圾桶（可復原），不呼叫messages().delete()做永久刪除
+    service = get_gmail_service()
+    service.users().messages().trash(userId="me", id=message_id).execute()
+
+
+def mark_as_read(message_id):
+    service = get_gmail_service()
+    service.users().messages().modify(
+        userId="me", id=message_id, body={"removeLabelIds": ["UNREAD"]}
+    ).execute()
+
+
+def mark_as_important(message_id):
+    service = get_gmail_service()
+    service.users().messages().modify(
+        userId="me", id=message_id, body={"addLabelIds": ["IMPORTANT"]}
+    ).execute()

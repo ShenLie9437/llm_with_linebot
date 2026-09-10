@@ -1,6 +1,12 @@
 from unittest.mock import patch
 
-from tools.gmail_tools import list_unread_emails, draft_reply
+from tools.gmail_tools import (
+    list_unread_emails,
+    draft_reply,
+    delete_email,
+    mark_email_read,
+    mark_email_important,
+)
 
 
 @patch("tools.gmail_tools.list_unread_summaries")
@@ -27,3 +33,24 @@ def test_draft_reply_returns_draft_id(mock_create):
     result = draft_reply.invoke({"message_id": "msg1", "body_text": "回覆內容"})
     mock_create.assert_called_once_with("msg1", "回覆內容")
     assert "draft123" in result
+
+
+@patch("tools.gmail_tools.trash_message")
+def test_delete_email_trashes_and_mentions_recoverable(mock_trash):
+    result = delete_email.invoke({"message_id": "msg1"})
+    mock_trash.assert_called_once_with("msg1")
+    assert "垃圾桶" in result
+
+
+@patch("tools.gmail_tools.mark_as_read")
+def test_mark_email_read(mock_mark):
+    result = mark_email_read.invoke({"message_id": "msg1"})
+    mock_mark.assert_called_once_with("msg1")
+    assert "已讀" in result
+
+
+@patch("tools.gmail_tools.mark_as_important")
+def test_mark_email_important(mock_mark):
+    result = mark_email_important.invoke({"message_id": "msg1"})
+    mock_mark.assert_called_once_with("msg1")
+    assert "重要" in result
