@@ -130,13 +130,15 @@ python score_and_notify.py
 
 **3. 對外曝露webhook**
 
-開發/測試階段可以用 [Tailscale Funnel](https://tailscale.com/kb/1223/funnel)（跟朋友專案用的方式一樣，免費、不用自己管憑證）：
+開發/測試階段用 [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/) 的Quick Tunnel（免帳號免網域）：
 
 ```bash
-tailscale funnel 8000
+cloudflared tunnel --url http://localhost:8000
 ```
 
-會給一個`https://<你的機器>.ts.net`網址，把這個網址+`/callback`填回LINE webhook設定即可測試雙向對話。正式常駐（階段3規劃的低功耗裝置或Oracle Cloud免費ARM VM）上線時再把這個曝露方式搬過去。
+會給一個`https://<隨機字串>.trycloudflare.com`網址，把這個網址+`/callback`填回LINE webhook設定即可測試雙向對話。
+
+一開始用的是Tailscale Funnel（`tailscale funnel 8000`），主機名固定、不用每次重新設定webhook URL，但測試時遇到LINE的Webhook「Verify」間歇性回報`invalid host`（同時外部curl連續測試同一網址都成功），追查後懷疑是LINE的驗證服務解析`.ts.net`這類動態網域時偶爾拿不到穩定的DNS紀錄；換成Cloudflare Tunnel後同一晚沒再復現。但目前只觀察了一晚，樣本量還不足以斷定Cloudflare完全不會有類似問題，之後如果又出現連不上的情況要重新檢視。Cloudflare的已知代價是網址每次重開都會變，要回LINE Developers Console重新填一次Webhook URL；正式常駐（階段3規劃的低功耗裝置或Oracle Cloud免費ARM VM）上線時，再視情況決定要不要換成有固定網域的方案（例如Cloudflare Tunnel搭配自己的網域）。
 
 **4. Gemini API Key**
 
