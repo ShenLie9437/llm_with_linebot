@@ -57,16 +57,16 @@ Gmail部分**可以刪除、標記已讀/重要，但絕對不會自動寄送**�
 - `score_and_notify.py`：評分與推播主腳本
 - `email_digest.py`：email摘要/分類/草稿/推播主腳本
 - `db.py`：PostgreSQL連線設定
-- `llm_client.py`：呼叫本地LLM，`score_with_local_llm`給評分用（回傳結構化JSON）
-- `gemini_client.py`：呼叫Gemini API，`ask_gemini`給一般文字回覆，`ask_gemini_json`給結構化JSON回覆
-- `google_auth.py`：Gmail/Drive/Docs共用的OAuth憑證邏輯與scope清單（單一來源，避免各模組宣告的scope兜不起來）
+- `llm_client.py`：呼叫本地LLM評分職缺
+- `gemini_client.py`：呼叫Gemini API，處理一般回覆與結構化JSON回覆
+- `google_auth.py`：Gmail/Drive/Docs共用的OAuth憑證邏輯
 - `gmail_client.py`：讀未讀信摘要、建草稿回信
-- `docs_client.py`：依檔名找文件（純文字/markdown或原生Google文件皆可）、讀取全文、文末新增內容、把檔案轉成原生Google文件格式
-- `agent_graph.py`：LangGraph agent定義（`create_react_agent` + Gemini + `tools/`）
-- `tools/`：把各項功能包成LangChain tool給agent呼叫（`gmail_tools.py`、`docs_tools.py`、`job_tools.py`、`line_tools.py`）
-- `line_client.py`：LINE Push API（單向推播）+ Reply API（webhook收到訊息後回覆）
-- `webhook_server.py`：FastAPI，接收LINE webhook事件，驗證簽章，呼叫agent並回覆
-- `tests/`：pytest測試，mock掉所有外部API呼叫（Gmail/Drive/Gemini/LINE/DB）
+- `docs_client.py`：讀寫Google Drive文件，依檔案格式自動選擇API
+- `agent_graph.py`：LangGraph agent定義
+- `tools/`：把各項功能包成LangChain tool供agent呼叫
+- `line_client.py`：LINE Push/Reply API
+- `webhook_server.py`：FastAPI webhook，接收並回覆LINE訊息
+- `tests/`：pytest測試，mock掉所有外部API呼叫
 
 ## 測試
 
@@ -78,7 +78,7 @@ pytest
 
 ## 前置需求
 
-- 已跑過 `E:\Playwright\schema.sql` 建好的 `jobhunt` 資料庫（本專案共用同一個資料庫，不重複建表）
+- 已存在一個包含`jobs` table的PostgreSQL `jobhunt`資料庫（schema由另一個關聯專案管理，這裡不重複建立）
 - 本地跑起來的LLM server，任一種OpenAI相容端點皆可：
   - Ollama：`ollama run <model>`（預設監聽 `http://localhost:11434/v1/chat/completions`）
   - llama.cpp：`llama-server -m models/xxx.gguf --port 8080`
