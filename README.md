@@ -4,7 +4,7 @@
 
 ## 架構
 
-**階段1：評分+推播（單向）**
+**評分+推播（單向）**
 
 ```
 jobhunt 資料庫（jobs table）
@@ -18,7 +18,7 @@ jobhunt 資料庫（jobs table）
         └─ 找出達門檻分數且尚未推播的職缺 → LINE Push API
 ```
 
-**階段4：LangGraph agent（雙向，webhook）**
+**LangGraph agent（雙向，webhook）**
 
 ```
 使用者傳LINE訊息
@@ -37,7 +37,7 @@ agent_graph.py：LangGraph的create_react_agent（LLM為Gemini），
 line_client.reply_message()（用webhook帶來的replyToken回覆）
 ```
 
-**階段5：email排程摘要（單向，本機工作排程器定期執行）**
+**email排程摘要（單向，本機工作排程器定期執行）**
 
 ```
 email_digest.py
@@ -54,8 +54,8 @@ Gmail部分**可以刪除、標記已讀/重要，但絕對不會自動寄送**�
 
 ## 檔案結構
 
-- `score_and_notify.py`：階段1主腳本，評分與推播流程
-- `email_digest.py`：階段5主腳本，email摘要/分類/草稿/推播
+- `score_and_notify.py`：評分與推播主腳本
+- `email_digest.py`：email摘要/分類/草稿/推播主腳本
 - `db.py`：PostgreSQL連線設定
 - `llm_client.py`：呼叫本地LLM，`score_with_local_llm`給評分用（回傳結構化JSON）
 - `gemini_client.py`：呼叫Gemini API，`ask_gemini`給一般文字回覆，`ask_gemini_json`給結構化JSON回覆
@@ -110,7 +110,7 @@ psql -d jobhunt -f migrations/001_add_notified_at.sql
 python score_and_notify.py
 ```
 
-## 啟用LangGraph agent（階段4）前置設定
+## 啟用LangGraph agent前置設定
 
 以下這些步驟需要在瀏覽器/主控台手動操作，程式碼本身已經寫好、對應環境變數見上面的`.env.example`。
 
@@ -138,7 +138,7 @@ cloudflared tunnel --url http://localhost:8000
 
 會給一個`https://<隨機字串>.trycloudflare.com`網址，把這個網址+`/callback`填回LINE webhook設定即可測試雙向對話。
 
-一開始用的是Tailscale Funnel（`tailscale funnel 8000`），主機名固定、不用每次重新設定webhook URL，但測試時遇到LINE的Webhook「Verify」間歇性回報`invalid host`（同時外部curl連續測試同一網址都成功），追查後懷疑是LINE的驗證服務解析`.ts.net`這類動態網域時偶爾拿不到穩定的DNS紀錄；換成Cloudflare Tunnel後同一晚沒再復現。但目前只觀察了一晚，樣本量還不足以斷定Cloudflare完全不會有類似問題，之後如果又出現連不上的情況要重新檢視。Cloudflare的已知代價是網址每次重開都會變，要回LINE Developers Console重新填一次Webhook URL；正式常駐（階段3規劃的低功耗裝置或Oracle Cloud免費ARM VM）上線時，再視情況決定要不要換成有固定網域的方案（例如Cloudflare Tunnel搭配自己的網域）。
+一開始用的是Tailscale Funnel（`tailscale funnel 8000`），主機名固定、不用每次重新設定webhook URL，但測試時遇到LINE的Webhook「Verify」間歇性回報`invalid host`（同時外部curl連續測試同一網址都成功），追查後懷疑是LINE的驗證服務解析`.ts.net`這類動態網域時偶爾拿不到穩定的DNS紀錄；換成Cloudflare Tunnel後同一晚沒再復現。但目前只觀察了一晚，樣本量還不足以斷定Cloudflare完全不會有類似問題，之後如果又出現連不上的情況要重新檢視。Cloudflare的已知代價是網址每次重開都會變，要回LINE Developers Console重新填一次Webhook URL；正式常駐上線時，再視情況決定要不要換成有固定網域的方案（例如Cloudflare Tunnel搭配自己的網域）。
 
 **4. Gemini API Key**
 
@@ -155,6 +155,6 @@ python email_digest.py
 ## 之後的擴充方向
 
 - 排程：用工作排程器每小時/每天跑一次 `score_and_notify.py` 和 `email_digest.py`
-- 階段2：換更小的量化模型、比較評分品質
+- 換更小的量化模型、比較評分品質
 - 部署決定維持本機常駐（不上雲端），理由是Gmail OAuth在「測試中」狀態下refresh token只有7天效期，全自動雲端排程需要定期人工重新授權，本機執行時反而更貼近實際使用習慣
 - `tools/`之後可視需要擴充更多工具（例如日曆、更多Drive檔案類型）
