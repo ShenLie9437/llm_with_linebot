@@ -8,3 +8,4 @@ models/
 test_push.py
 test_score.py
 docs/local-dev-webhook.md
+docs/local-dev-rag-verification.md
