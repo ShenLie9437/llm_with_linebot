@@ -8,6 +8,7 @@ from tools.gmail_tools import (
 from tools.docs_tools import summarize_doc, append_to_doc_by_name
 from tools.job_tools import query_recent_jobs
 from tools.line_tools import notify_important
+from tools.rag_tools import search_knowledge_base
 
 ALL_TOOLS = [
     list_unread_emails,
@@ -19,4 +20,5 @@ ALL_TOOLS = [
     append_to_doc_by_name,
     query_recent_jobs,
     notify_important,
+    search_knowledge_base,
 ]
